@@ -1,0 +1,290 @@
+
+<html>
+<body>
+
+<h1>"Segregation" by Tom Schelling</h1>
+
+
+
+Length:<input type="number" value="500" id="l">
+Height:<input type="number" value="500" id="b">
+Resolution:<input type="number" value="1"  min="1" id="r" >
+<br>
+
+<br>
+
+<button onclick="generateField()">Generiere Feld</button> 
+<br>
+Tolerance Yellow:<input type="number" value="5" min="0" max="8" id="t1">
+Tolerance Blue:<input type="number" value="2" min="0" max="8" id="t2">
+<br>
+<button onclick="start()">Starte einen Durchlauf der Simulation!</button>
+<br>
+<canvas id="myCanvas" width="0" height="0" style="border:1px solid #000000;">
+</canvas>
+
+<script language=JavaScript>
+
+
+
+function genColor(){
+
+
+//aus Farben zufÃ¤llig auswÃ¤hlen:
+var colors = ['yellow', 'blue', 'black'];
+var selectedColor= colors[Math.floor(Math.random() * colors.length)];
+return selectedColor;
+
+}
+
+function Create2DArray(rows) {
+  var arr = [];
+
+  for (var i=0;i<rows;i++) {
+     arr[i] = [];
+  }
+
+  return arr;
+}
+
+
+
+
+
+//Colormatrix:
+var feld=Create2DArray(Math.max(l.value,b.value));
+var resolution;
+
+
+function generateField(){
+		
+		//Set resolution:
+		resolution=r.value;
+
+		if(l.value==''||b.value==''){
+			alert("Feld ist leer!");
+		}
+		else if(l.value<=0||b.value<=0){
+			alert("Nur positive Werte >= 0!");
+		}else{		
+
+	    //Berechne prozentuelle Verteilung:
+	    var allfields=l.value*b.value;
+
+	    
+	    
+	    //alert(yel+' '+blu+' '+bla);
+
+
+		//Feld generieren:
+		var canvas = document.getElementById("myCanvas");
+		canvas.width=l.value*resolution;
+		canvas.height=b.value*resolution;
+		var ctx=canvas.getContext("2d");
+		var colornumber=-1;
+
+		
+
+
+		for(var i=0; i<l.value;i++){
+			for(var j=0;j<b.value;j++){
+
+			
+				var c=genColor();
+			
+
+				if(c=='blue'){
+
+					ctx.fillStyle='blue';
+					colornumber=2;
+
+				}
+				else if(c=='yellow'){
+					ctx.fillStyle='yellow';
+					colornumber=1;
+					
+					
+
+				}
+				else if(c=='black')
+				{	
+					ctx.fillStyle='black';
+					colornumber=0;
+					
+
+				}
+						
+			
+			
+			//Speichere Farbenmatrix
+			feld[i][j]=(colornumber);
+					
+			
+			//Zeichne Rechteck:
+			ctx.fillRect(i*resolution,j*resolution,resolution,resolution);
+			//alert(feld[i,j]);
+			}
+			
+		}
+
+	}
+}
+	//alert(feld[0][0]);
+
+
+
+
+function findingNeighbors(myArray, i, j) {
+  var r=[];
+  var rowLimit = l.value-1;
+  var columnLimit = b.value-1;
+
+  for(var x = Math.max(0, i-1); x <= Math.min(i+1, rowLimit); x++) {
+    for(var y = Math.max(0, j-1); y <= Math.min(j+1, columnLimit); y++) {
+      if(x !== i || y !== j) {
+        r.push(myArray[x][y]);
+      }
+    }
+  }
+  return r;
+}
+
+
+function getForeignersY(myArray,i,j){
+	var n=findingNeighbors(myArray,i,j);
+	var fremde=0;
+		for(var x=0; x<n.length;x++){
+		    if(n[x]==2){
+				fremde++;
+			}
+
+		}
+		return fremde;
+}
+
+function getForeignersB(myArray,i,j){
+	var n=findingNeighbors(myArray,i,j);
+	var fremde=0;
+		for(var x=0; x<n.length;x++){
+		    if(n[x]==1){
+				fremde++;
+			}
+
+		}
+		return fremde;
+}
+
+
+	function start(){
+	
+		var canvas = document.getElementById("myCanvas");
+		var ctx=canvas.getContext("2d");
+	
+		
+			for(var i=0;i<l.value;i++){
+				alert("Step by Step?");
+			for (var j=0;j<b.value;j++){
+					
+				if(feld[i][j]==1){
+
+					//Umziehen, falls Toleranz kleiner ist als fremde:
+					var fremde=getForeignersY(feld,i,j);
+
+				 if(fremde>t1.value){
+				 	//alert("Hier");
+				 	var x=Math.floor(Math.random()*l.value);
+				 	var y=Math.floor(Math.random()*b.value);
+				 	counter=0;
+
+				 	while(true){
+				 		counter++;
+				 		if(counter==10000) break;
+
+				 		if(feld[x][y]==0 && fremde>getForeignersY(feld,x,y)){
+				 		break;
+				 		}
+				 		else{
+				 		x=Math.floor(Math.random()*l.value);
+				 		y=Math.floor(Math.random()*b.value);
+				 		
+				 		}
+
+				 	}
+				 	//Colormatrix updaten:
+				 
+				 	feld[x][y]=1;
+				 	feld[i][j]=0;
+				 	
+				
+				 	ctx.fillStyle='black';
+				 	ctx.fillRect(i*resolution,j*resolution,resolution,resolution);
+				 	
+				 	ctx.fillStyle='yellow';
+				 	//Zeichne Rechteck:
+					ctx.fillRect(x*resolution,y*resolution,resolution,resolution);
+					  
+					
+
+				}	
+			     if(feld[i][j]==2)
+				{	
+				
+					//Umziehen, falls Toleranz kleiner ist als fremde:
+					var fremde=getForeignersY(feld,i,j);
+
+					
+				if(fremde>t2.value){
+				 	
+				 	
+					var x=Math.floor(Math.random()*l.value);
+				 	var y=Math.floor(Math.random()*b.value);
+				 		var counter=0;
+				 	while(true){
+				 		counter++;
+				 		if(counter==10000) break;
+				 		if(feld[x][y]==0 && fremde>getForeignersB(feld,x,y)){
+				 		
+				 		break;
+				 		}
+				 		else{
+				 		x=Math.floor(Math.random()*l.value);
+				 		y=Math.floor(Math.random()*b.value);
+				 	
+				 		}
+
+				 	}
+				 	//Colormatrix updaten:
+				 	
+				 	feld[x][y]=2;
+				 	feld[i][j]=0;
+				 	
+				 	ctx.fillStyle='black';
+				 	ctx.fillRect(i*resolution,j*resolution,resolution,resolution);
+				 	
+				 	ctx.fillStyle='blue';
+				 	//Zeichne Rechteck:
+					ctx.fillRect(x*resolution,y*resolution,resolution,resolution);
+					
+
+					
+				
+			}
+		}
+	}
+}
+}
+
+}
+		
+	
+			
+
+		
+
+
+</script>
+
+
+
+</body>
+</html> 
